@@ -32,16 +32,16 @@ jobs:
       uses: actions/setup-go@v4
       with:
         go-version: '1.25' # Or '1.25.x'
-   
 
-    - name: Run migrations
-      run: make migrateup 
-    
     - name: Install golang-migrate
       run: |
        curl -L https://github.com/golang-migrate/migrate/releases/download/v4.19.1/migrate.linux-amd64.tar.gz| tar xvz
        sudo mv migrate.linux-amd /usr/local/bin/migrate
        which migrate 
 
+    - name: Run migrations
+      run: make migrateup 
+    
+    
     - name: Test
       run: make test 
