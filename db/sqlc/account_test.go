@@ -11,15 +11,13 @@ import (
 	"tutorial.sqlc.dev/app/utils"
 )
 
-func TestCreateAccount(t *testing.T) {
-	createRandomAccount(t)
-
-}
-
 func createRandomAccount(t *testing.T) Account {
+	// 1. Create a real user first
+	user := createRandomUser(t)
 
 	arg := CreateAccountParams{
-		Owner:   utils.RandomOwner(), // randomly generated data
+		// 2. Use the Username from the user you just created
+		Owner:   user.Username,
 		Balance: utils.RandomMoney(),
 		Curency: utils.RandomCurency(),
 	}
