@@ -37,7 +37,7 @@ func (server *Server) createUser(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	// insert new user to the database
+
 	arg := db.CreateUserParams{
 		Username:       req.Username,
 		Hashedpassword: hashedpassword,
@@ -49,14 +49,17 @@ func (server *Server) createUser(ctx *gin.Context) {
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			switch pqErr.Code.Name() {
-			case "unique_key_violation":
+			case "unique_violation", "unique_key_violation":
 				ctx.JSON(http.StatusForbidden, errorResponse(err))
 				return
 			}
 		}
-		ctx.JSON(http.StatusOK, user)
-
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
 	}
+
+	// --- REMOVED THE EXTRA BRACE FROM HERE ---
+
 	rsp := createUserResponse{
 		Username:          user.Username,
 		Fullname:          user.Fullname,
@@ -65,5 +68,4 @@ func (server *Server) createUser(ctx *gin.Context) {
 		CreatedAt:         user.CreatedAt,
 	}
 	ctx.JSON(http.StatusOK, rsp)
-
 }
