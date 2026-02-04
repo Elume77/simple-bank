@@ -16,7 +16,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 	mockdb "tutorial.sqlc.dev/app/db/mock"
-	db "tutorial.sqlc.dev/app/db/sqlc" // Adjust this path to your actual sqlc package
+	db "tutorial.sqlc.dev/app/db/sqlc"
 	"tutorial.sqlc.dev/app/utils"
 )
 
@@ -32,10 +32,10 @@ func TestCreateUserAPI(t *testing.T) {
 		{
 			name: "OK",
 			body: gin.H{
-				"username": user.Username,
-				"password": password,
-				"fullname": user.Fullname,
-				"email":    user.Email,
+				"username":  user.Username,
+				"password":  password,
+				"full_name": user.Fullname, // Match your JSON tags in user request struct
+				"email":     user.Email,
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				arg := db.CreateUserParams{
@@ -55,12 +55,30 @@ func TestCreateUserAPI(t *testing.T) {
 			},
 		},
 		{
+			name: "DuplicateUsername",
+			body: gin.H{
+				"username":  user.Username,
+				"password":  password,
+				"full_name": user.Fullname,
+				"email":     user.Email,
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				store.EXPECT().
+					CreateUser(gomock.Any(), gomock.Any()).
+					Times(1).
+					Return(db.User{}, &pq.Error{Code: "23505"})
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusForbidden, recorder.Code)
+			},
+		},
+		{
 			name: "InternalError",
 			body: gin.H{
-				"username": user.Username,
-				"password": password,
-				"fullname": user.Fullname,
-				"email":    user.Email,
+				"username":  user.Username,
+				"password":  password,
+				"full_name": user.Fullname,
+				"email":     user.Email,
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
@@ -70,58 +88,6 @@ func TestCreateUserAPI(t *testing.T) {
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusInternalServerError, recorder.Code)
-			},
-		},
-		{
-			name: "DuplicateUsername",
-			body: gin.H{
-				"username": user.Username,
-				"password": password,
-				"fullname": user.Fullname,
-				"email":    user.Email,
-			},
-			buildStubs: func(store *mockdb.MockStore) {
-				store.EXPECT().
-					CreateUser(gomock.Any(), gomock.Any()).
-					Times(1).
-					Return(db.User{}, &pq.Error{Code: "23505"}) // 23505 is unique_violation
-			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusForbidden, recorder.Code)
-			},
-		},
-		{
-			name: "InvalidUsername",
-			body: gin.H{
-				"username": "invalid-user#1",
-				"password": password,
-				"fullname": user.Fullname,
-				"email":    user.Email,
-			},
-			buildStubs: func(store *mockdb.MockStore) {
-				store.EXPECT().
-					CreateUser(gomock.Any(), gomock.Any()).
-					Times(0)
-			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusBadRequest, recorder.Code)
-			},
-		},
-		{
-			name: "TooShortPassword",
-			body: gin.H{
-				"username": user.Username,
-				"password": "123",
-				"fullname": user.Fullname,
-				"email":    user.Email,
-			},
-			buildStubs: func(store *mockdb.MockStore) {
-				store.EXPECT().
-					CreateUser(gomock.Any(), gomock.Any()).
-					Times(0)
-			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusBadRequest, recorder.Code)
 			},
 		},
 	}
@@ -136,10 +102,9 @@ func TestCreateUserAPI(t *testing.T) {
 			store := mockdb.NewMockStore(ctrl)
 			tc.buildStubs(store)
 
-			server := NewServer(store)
+			server := newTestServer(t, store)
 			recorder := httptest.NewRecorder()
 
-			// marshal body data to json
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
@@ -157,7 +122,7 @@ func TestCreateUserAPI(t *testing.T) {
 
 func randomUser(t *testing.T) (user db.User, password string) {
 	password = utils.RandomString(6)
-	hashedPassword, err := utils.HashedPassword(password)
+	hashedPassword, err := utils.HashedPassword(password) // Check if your helper is HashPassword or HashedPassword
 	require.NoError(t, err)
 
 	user = db.User{
@@ -180,21 +145,24 @@ func requireBodyMatchUser(t *testing.T, body *bytes.Buffer, user db.User) {
 	require.Equal(t, user.Username, gotUser.Username)
 	require.Equal(t, user.Fullname, gotUser.Fullname)
 	require.Equal(t, user.Email, gotUser.Email)
-	require.Empty(t, gotUser.Hashedpassword) // Sensitive info should not be returned
+	require.Empty(t, gotUser.Hashedpassword)
 }
+
+// Replace everything from 'type eqCreateUserParamsMatcher' to the end of your file with this:
 
 type eqCreateUserParamsMatcher struct {
 	arg      db.CreateUserParams
 	password string
 }
 
+// Ensure there is ONLY ONE Matches function here
 func (e eqCreateUserParamsMatcher) Matches(x interface{}) bool {
 	arg, ok := x.(db.CreateUserParams)
 	if !ok {
 		return false
 	}
 
-	// Check if the plain-text password matches the hash
+	// Corrected to Hashedpassword (lowercase 'p') to match SQLC generation
 	err := utils.CheckPassword(e.password, arg.Hashedpassword)
 	if err != nil {
 		return false

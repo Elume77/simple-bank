@@ -9,12 +9,11 @@ import (
 	db "tutorial.sqlc.dev/app/db/sqlc"
 )
 
-// CREATE TRANSFER REQUEST STRUCT AND FUNCTION
 type transferRequest struct {
 	FromAccountID int64  `json:"from_account_id" binding:"required,min=1"`
 	ToAccountID   int64  `json:"to_account_id" binding:"required,min=1"`
 	Amount        int64  `json:"amount" binding:"required,gt=0"`
-	Curency       string `json:"currency" binding:"required,currency"`
+	Currency      string `json:"currency" binding:"required,currency"`
 }
 
 func (server *Server) createTransfer(ctx *gin.Context) {
@@ -24,11 +23,11 @@ func (server *Server) createTransfer(ctx *gin.Context) {
 		return
 	}
 
-	// Fixed: matched field names (AccountID and Currency)
-	if !server.validAccount(ctx, req.FromAccountID, req.Curency) {
+	// Validation logic
+	if !server.validAccount(ctx, req.FromAccountID, req.Currency) {
 		return
 	}
-	if !server.validAccount(ctx, req.ToAccountID, req.Curency) {
+	if !server.validAccount(ctx, req.ToAccountID, req.Currency) {
 		return
 	}
 
@@ -47,24 +46,21 @@ func (server *Server) createTransfer(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, result)
 }
 
-func (server *Server) validAccount(ctx *gin.Context, accountID int64, curency string) bool {
-
+func (server *Server) validAccount(ctx *gin.Context, accountID int64, currency string) bool {
 	account, err := server.store.GetAccount(ctx, accountID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			ctx.JSON(http.StatusNotFound, errorResponse(err))
 			return false
-
 		}
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return false
 	}
 
-	if account.Curency != curency {
-		err := fmt.Errorf("account [%d] currency mismatch %s vs %s ", account.ID, account.Curency, curency)
+	if account.Curency != currency {
+		err := fmt.Errorf("account [%d] currency mismatch: %s vs %s", account.ID, account.Curency, currency)
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return false
 	}
 	return true
-
 }
