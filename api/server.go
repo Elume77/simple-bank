@@ -19,13 +19,6 @@ type Server struct {
 	router     *gin.Engine
 }
 
-//type transferRequest struct {
-//	FromAccountID int64  `json:"from_account_id" binding:"required,min=1"`
-//	ToAccountID   int64  `json:"to_account_id" binding:"required,min=1"`
-//	Amount        int64  `json:"amount" binding:"required,gt=0"`
-//	Curency       string `json:"currency" binding:"required,currency"` // Corrected typo
-//}
-
 func NewServer(config utils.Config, store db.Store) (*Server, error) {
 	// Note: Check your config field name (SymmetricKey vs TokenSymmetricKeysymmetricKey)
 	tokenMaker, err := token.NewPasetoMaker(config.TokenSymmetricKey)
@@ -54,12 +47,14 @@ func (server *Server) setupRouter() {
 
 	router.POST("/users/login", server.loginUser)
 
-	router.POST("/accounts", server.createAccount)
-	router.GET("/accounts/:id", server.getAccount)
-	router.GET("/accounts", server.listAccount)
+	// 2. PROTECTED ROUTES
+	// Everything in this group will go through the authMiddleware
+	authRoutes := router.Group("/").Use(authMiddleware(server.tokenMaker))
 
-	router.POST("/transfers", server.createTransfer)
-
+	authRoutes.POST("/accounts", server.createAccount)
+	authRoutes.GET("/accounts/:id", server.getAccount)
+	authRoutes.GET("/accounts", server.listAccount) // Fixed: moved inside auth
+	authRoutes.POST("/transfers", server.createTransfer)
 	server.router = router
 }
 

@@ -2,11 +2,13 @@ package api
 
 import (
 	"database/sql"
+	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/lib/pq"
 	db "tutorial.sqlc.dev/app/db/sqlc"
+	"tutorial.sqlc.dev/app/token"
 )
 
 //            +++++++++++++++++++++       +++++++++++++++    //
@@ -14,7 +16,7 @@ import (
 // CREATE ACCOUNT STRUCT AND FUNCTION
 
 type createAccountRequest struct {
-	Owner   string `json:"owner" binding:"required"`
+	//	Owner   string `json:"owner" binding:"required"`
 	Curency string `json:"currency" binding:"required,currency"`
 }
 
@@ -25,9 +27,12 @@ func (server *Server) createAccount(ctx *gin.Context) {
 		return
 	}
 
+	// Get owner from middleware payload
+	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
+
 	// insert new account to the database
 	arg := db.CreateAccountParams{
-		Owner:   req.Owner,
+		Owner:   authPayload.Username,
 		Curency: req.Curency,
 		Balance: 0,
 	}
@@ -36,7 +41,7 @@ func (server *Server) createAccount(ctx *gin.Context) {
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			switch pqErr.Code.Name() {
-			case " foreign_key_violation", "unique_key_violation":
+			case "foreign_key_violation", "unique_violation":
 				ctx.JSON(http.StatusForbidden, errorResponse(err))
 				return
 			}
@@ -67,12 +72,21 @@ func (server *Server) getAccount(ctx *gin.Context) {
 	account, err := server.store.GetAccount(ctx, req.ID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			ctx.JSON(http.StatusBadRequest, errorResponse(err))
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
 			return
 		}
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
+
+	// --- AUTHORIZATION CHECK ---
+	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
+	if account.Owner != authPayload.Username {
+		err := errors.New("account does not belong to the authenticated user")
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		return
+	}
+
 	ctx.JSON(http.StatusOK, account)
 }
 
@@ -92,11 +106,16 @@ func (server *Server) listAccount(ctx *gin.Context) {
 		return
 	}
 
-	arg := db.ListAccountParams{
+	// Extract user from token payload
+	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
+
+	arg := db.ListAccountsParams{
+		Owner:  authPayload.Username,
 		Limit:  req.PageSize,
 		Offset: (req.PageID - 1) * req.PageSize,
 	}
-	account, err := server.store.ListAccount(ctx, arg)
+
+	account, err := server.store.ListAccounts(ctx, arg)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
