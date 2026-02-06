@@ -12,6 +12,8 @@ import (
 	"tutorial.sqlc.dev/app/token"
 )
 
+//                    //                      //
+
 func addAuthorization(
 	t *testing.T,
 	request *http.Request,
@@ -27,6 +29,7 @@ func addAuthorization(
 	request.Header.Set(authorizationHeaderKey, authorizationHeader)
 }
 
+// //                        //
 func TestAuthMiddleware(t *testing.T) {
 	testCases := []struct {
 		name          string
