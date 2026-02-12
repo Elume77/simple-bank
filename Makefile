@@ -37,6 +37,6 @@ install-migrate:
 	go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
 
 docker-build:
-	docker build -t simple-bank:latest .
+	docker build -t simplebank:latest .
 
 .PHONY: postgres createdb dropdb migratedown migrateup migratedown1 migrateup1 sqlc test server mock install-migrate docker-build
