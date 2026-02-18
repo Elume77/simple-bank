@@ -32,10 +32,10 @@ func TestCreateUserAPI(t *testing.T) {
 		{
 			name: "OK",
 			body: gin.H{
-				"username": user.Username,
-				"password": password,
-				"fullname": user.Fullname, // Match your JSON tags in user request struct
-				"email":    user.Email,
+				"username":  user.Username,
+				"password":  password,
+				"full_name": user.Fullname, // Match your JSON tags in user request struct
+				"email":     user.Email,
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				arg := db.CreateUserParams{
@@ -57,10 +57,10 @@ func TestCreateUserAPI(t *testing.T) {
 		{
 			name: "DuplicateUsername",
 			body: gin.H{
-				"username": user.Username,
-				"password": password,
-				"fullname": user.Fullname,
-				"email":    user.Email,
+				"username":  user.Username,
+				"password":  password,
+				"full_name": user.Fullname,
+				"email":     user.Email,
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
@@ -75,10 +75,10 @@ func TestCreateUserAPI(t *testing.T) {
 		{
 			name: "InternalError",
 			body: gin.H{
-				"username": user.Username,
-				"password": password,
-				"fullname": user.Fullname,
-				"email":    user.Email,
+				"username":  user.Username,
+				"password":  password,
+				"full_name": user.Fullname,
+				"email":     user.Email,
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().

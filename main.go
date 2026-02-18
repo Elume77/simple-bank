@@ -21,10 +21,17 @@ func main() {
 		log.Fatal("cannot connect to db:", err)
 	}
 
+	// Ping the database to ensure the connection is actually established
+	err = conn.Ping()
+	if err != nil {
+		log.Fatal("database is not reachable:", err)
+	}
+
 	store := db.NewStore(conn)
 	server, err := api.NewServer(config, store)
-
-	// Pass the key from config to the NewServer constructor
+	if err != nil {
+		log.Fatal("cannot create server:", err)
+	}
 
 	err = server.Start(config.ServerAddress)
 	if err != nil {
