@@ -2,6 +2,7 @@ package api
 
 import (
 	"database/sql"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -14,13 +15,13 @@ import (
 type createUserRequest struct {
 	Username string `json:"username" binding:"required,alphanum"`
 	Password string `json:"password" binding:"required,min=6"`
-	Fullname string `json:"fullname" binding:"required"`
+	Fullname string `json:"full_name" binding:"required"`
 	Email    string `json:"email" binding:"required,email"`
 }
 
 type userResponse struct {
 	Username          string    `json:"username"`
-	Fullname          string    `json:"fullname"`
+	Fullname          string    `json:"full_name"`
 	Email             string    `json:"email"`
 	PasswordChangedAt time.Time `json:"password_changed_at"`
 	CreatedAt         time.Time `json:"created_at"`
@@ -43,6 +44,7 @@ func newUserResponse(user db.User) userResponse {
 func (server *Server) createUser(ctx *gin.Context) {
 	var req createUserRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
+		fmt.Printf("Received request: %+v\n", req)
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
