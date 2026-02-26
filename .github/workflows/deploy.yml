@@ -42,7 +42,9 @@ jobs:
 
       - name: Run Test
         env:
+          DB_URL: postgresql://root:secret@localhost:5432/simple_bank?sslmode=disable
           DB_SOURCE: postgresql://root:secret@localhost:5432/simple_bank?sslmode=disable
+          DB_DRIVER: postgres
         run: make test
 
   deploy:
