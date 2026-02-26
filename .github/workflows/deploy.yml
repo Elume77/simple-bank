@@ -6,7 +6,6 @@ on:
 
 jobs:
   test:
-    
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -17,23 +16,41 @@ jobs:
           POSTGRES_DB: simple_bank
         ports:
           - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - uses: actions/checkout@v4
+      
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
           go-version: '1.24'
+
+      - name: Install golang-migrate
+        run: make install-migrate
+
+      - name: Run Migrations
+        env:
+          DB_URL: postgresql://root:secret@localhost:5432/simple_bank?sslmode=disable
+        # We add $(go env GOPATH)/bin to the path so 'migrate' command is found
+        run: |
+          export PATH=$PATH:$(go env GOPATH)/bin
+          make migrateup
+
       - name: Run Test
+        env:
+          DB_SOURCE: postgresql://root:secret@localhost:5432/simple_bank?sslmode=disable
         run: make test
 
   deploy:
-    needs: test # Only deploy if tests pass
+    needs: test
     runs-on: ubuntu-latest
-    # Required for OIDC authentication with AWS
     permissions:
       id-token: write
       contents: read
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -54,8 +71,6 @@ jobs:
           ECR_REPOSITORY: simplebank
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          # Build the docker container
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
-          # Push both the unique SHA tag and the 'latest' tag
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
