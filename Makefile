@@ -25,7 +25,7 @@ sqlc:
 	sqlc generate
 
 test:
-	go test -v -cover ./...
+	go test -v -coverprofile=coverage.txt -covermode=atomic ./...
 
 server:
 	go run main.go

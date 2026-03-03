@@ -45,7 +45,7 @@ jobs:
           DB_URL: postgresql://root:secret@localhost:5432/simple_bank?sslmode=disable
           DB_SOURCE: postgresql://root:secret@localhost:5432/simple_bank?sslmode=disable
           DB_DRIVER: postgres
-        run: go test -v -cover ./... || true 
+        run: make test   #go test -v -cover ./... || true 
 
   deploy:
     needs: test
