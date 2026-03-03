@@ -35,7 +35,6 @@ jobs:
       - name: Run Migrations
         env:
           DB_URL: postgresql://root:secret@localhost:5432/simple_bank?sslmode=disable
-        # We add $(go env GOPATH)/bin to the path so 'migrate' command is found
         run: |
           export PATH=$PATH:$(go env GOPATH)/bin
           make migrateup
@@ -45,7 +44,7 @@ jobs:
           DB_URL: postgresql://root:secret@localhost:5432/simple_bank?sslmode=disable
           DB_SOURCE: postgresql://root:secret@localhost:5432/simple_bank?sslmode=disable
           DB_DRIVER: postgres
-        run: go test -v -cover ./... || true
+        run: go test -v -cover ./... # Removed || true so bad code won't deploy
 
   deploy:
     needs: test
@@ -60,7 +59,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/github-action-role
+          role-to-assume: arn:aws:iam::252380158032:role/github-action-role
           aws-region: us-east-1
 
       - name: Login to Amazon ECR Private
