@@ -28,7 +28,7 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: '1.24'
-          cache: false
+          cache: true
 
       - name: Install golang-migrate
         run: make install-migrate
@@ -37,14 +37,11 @@ jobs:
         env:
           DB_URL: postgresql://root:secret@localhost:5432/simple_bank?sslmode=disable
         run: |
-          export PATH=$PATH:$(go env GOPATH)/bin
-          make migrateup
+          $(go env GOPATH)/bin/migrate -path db/migtration -database "$DB_URL" -verbose up
 
       - name: Run Test
         env:
-          DB_URL: postgresql://root:secret@localhost:5432/simple_bank?sslmode=disable
           DB_SOURCE: postgresql://root:secret@localhost:5432/simple_bank?sslmode=disable
-          DB_DRIVER: postgres
         run: make test   #go test -v -cover ./... || true 
 
   deploy:
@@ -63,9 +60,14 @@ jobs:
           role-to-assume: arn:aws:iam::252380158032:role/github-action-role
           aws-region: us-east-1
 
-      - name: Login to Amazon ECR Private
+      - name: Login to Amazon ECR 
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
+      
+      - name: Load secrets and save to app.env
+        run: |
+          aws secretsmanager get-secret-value --secret-id simple_bank --query SecretString --output text | jq -r 'to_entries|map("\(.key)=\(.value)")|.[]' > app.env
+
 
       - name: Build, tag, and push image to Amazon ECR
         env:
