@@ -33,7 +33,7 @@ COPY start.sh .
 
 COPY wait-for.sh .
 
-RUN chmod +x start.sh 
+RUN chmod +x start.sh wait-for.sh
 
 
 ENTRYPOINT [ "/app/start.sh" ]
