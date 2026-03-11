@@ -20,6 +20,7 @@ func main() {
 	if err != nil {
 		log.Fatal("cannot connect to db:", err)
 	}
+	defer conn.Close()
 
 	// Ping the database to ensure the connection is actually established
 	err = conn.Ping()
