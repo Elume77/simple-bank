@@ -3,6 +3,14 @@
 # Exit immediately if a command exits with a non-zero status
 set -e
 
+# Load environment variables from app.env
+
+if [-f app.env ]; then 
+    echo "Loading environment variables from app.env"
+    # this exports every varaible defined in the file 
+    export $(grep -v '^#' app.env | xargs)
+fi
+
 echo "Using: $DB_URL"
 
 echo "Running database migrations..."
