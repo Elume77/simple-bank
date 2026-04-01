@@ -3,6 +3,8 @@
 # Exit immediately if a command exits with a non-zero status
 set -e
 
+echo "Using: $DB_URL"
+
 echo "Running database migrations..."
 # Use the environment variables from your app.env/environment
 # source /app/app.env    
