@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres  # This MUST match the hostname in your DB_URL
+spec:
+  selector:
+    app: postgres              # This must match the labels on your Postgres Pods
+  ports:
+    - protocol: TCP
+      port: 5432
+      targetPort: 5432
