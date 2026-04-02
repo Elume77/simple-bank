@@ -14,9 +14,13 @@ spec:
       labels:
         app: simple-bank-api
     spec:
+      initContainers:
+      - name: wait-for-postgres
+        image: busybox:1.28
+        command: ['sh', '-c', 'until nc -z postgres 5432; do echo waiting for postgres; sleep 2; done;']
       containers:
       - name: simple-bank-api
-        image: 252380158032.dkr.ecr.us-east-1.amazonaws.com/simplebank:9a460e5e4cdbedcf1f58ff4e810111a0caae0462
+        image: 252380158032.dkr.ecr.us-east-1.amazonaws.com/simplebank:34bfbd8f93c9741beb08705532f3aae9d106eb7a
         ports:
         - containerPort: 8080
         env:
