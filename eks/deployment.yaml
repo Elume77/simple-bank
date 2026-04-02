@@ -5,7 +5,7 @@ metadata:
   labels:
     app: simple-bank-api
 spec:
-  replicas:  1
+  replicas: 1
   selector:
     matchLabels:
       app: simple-bank-api
@@ -16,6 +16,16 @@ spec:
     spec:
       containers:
       - name: simple-bank-api
-        image: 252380158032.dkr.ecr.us-east-1.amazonaws.com/simplebank:4376679ed45faa40855af41da62317edb8f3487b
+        image: 252380158032.dkr.ecr.us-east-1.amazonaws.com/simplebank:cce100f18b4440d3bfbc2aeeea5d929639e82f02
         ports:
         - containerPort: 8080
+        env:
+          - name: DB_URL
+            value: "postgresql://root:secret@postgres-service-name:5432/simple_bank?sslmode=disable"
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "500m"
+            memory: "256Mi"
