@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres-deployment
+  labels:
+    app: postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:16-alpine  # Using a standard stable version
+        ports:
+        - containerPort: 5432
+        env:
+          - name: POSTGRES_USER
+            value: "root"
+          - name: POSTGRES_PASSWORD
+            value: "secret"
+          - name: POSTGRES_DB
+            value: "simple_bank"
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "256Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+        # Optional: persistent storage is recommended for production databases
+        # volumeMounts:
+        # - name: postgres-storage
+        #   mountPath: /var/lib/postgresql/data
+      # volumes:
+      # - name: postgres-storage
+      #   emptyDir: {}
