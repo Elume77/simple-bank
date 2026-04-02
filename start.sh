@@ -5,13 +5,13 @@ set -e
 
 # Load environment variables from app.env
 
-if [-f app.env ]; then 
-    echo "Loading environment variables from app.env"
-    # this exports every varaible defined in the file 
-    export $(grep -v '^#' app.env | xargs)
-fi
 
-echo "Using: $DB_URL"
+#echo "Using: $DB_URL"
+
+if [ -z "$DB_URL" ]; then
+  echo "Error: DB_URL environment variable is not set."
+  exit 1
+fi
 
 echo "Running database migrations..."
 # Use the environment variables from your app.env/environment

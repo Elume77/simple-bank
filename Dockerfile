@@ -10,8 +10,6 @@ COPY . .
 # Build the binary
 RUN CGO_ENABLED=0 GOOS=linux go build -o main main.go
 
-# RUN apk add --no-cache curl tar
-
 # Download and extract migrate (Fixed the tar extraction logic)
 RUN curl --http1.1 -L https://github.com/golang-migrate/migrate/releases/download/v4.19.1/migrate.linux-amd64.tar.gz | tar xvz
 #RUN curl -L https://github.com/golang-migrate/migrate/releases/download/v4.19.1/migrate.linux-amd64.tar.gz | tar xvz
