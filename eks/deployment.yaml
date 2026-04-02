@@ -16,12 +16,12 @@ spec:
     spec:
       containers:
       - name: simple-bank-api
-        image: 252380158032.dkr.ecr.us-east-1.amazonaws.com/simplebank:cce100f18b4440d3bfbc2aeeea5d929639e82f02
+        image: 252380158032.dkr.ecr.us-east-1.amazonaws.com/simplebank:9a460e5e4cdbedcf1f58ff4e810111a0caae0462
         ports:
         - containerPort: 8080
         env:
           - name: DB_URL
-            value: "postgresql://root:secret@postgres-service-name:5432/simple_bank?sslmode=disable"
+            value: "postgresql://root:secret@postgres:5432/simple_bank?sslmode=disable"
         resources:
           requests:
             cpu: "100m"
